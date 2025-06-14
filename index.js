@@ -35,3 +35,74 @@
 
 // Event Listener for Fetch Button
 // - Attach the main event listener to the button to start the process
+
+const API_KEY = "9150b6f57c8e40ff7ef462726816cda7";
+
+async function fetchWeatherData(city) {
+  const response = await fetch(
+    `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}`,
+  );
+
+  if (!response.ok) {
+    throw new Error("City not found");
+  }
+  const data = await response.json();
+  return data;
+}
+
+function displayWeather(data) {
+  const weatherDisplay = document.getElementById("weather-display");
+  if (!weatherDisplay) return;
+
+  const tempCelsius = Math.round(data.main.temp - 273.15);
+  weatherDisplay.innerHTML = `
+    <h2>${data.name}</h2>
+    <p>Temperature: ${tempCelsius}°C</p>
+    <p>Humidity: ${data.main.humidity}%</p>
+    <p>Conditions: ${data.weather[0].description}</p>
+  `;
+  const errorMessage = document.getElementById("error-message");
+  if (errorMessage) errorMessage.classList.add("hidden");
+}
+
+function displayError(message) {
+  const errorMessage = document.getElementById("error-message");
+  if (!errorMessage) return;
+  errorMessage.textContent = message;
+  errorMessage.classList.remove("hidden");
+  const weatherDisplay = document.getElementById("weather-display");
+  if (weatherDisplay) weatherDisplay.innerHTML = "";
+}
+
+function setupEventListeners() {
+  const fetchBtn = document.getElementById("fetch-weather");
+  if (!fetchBtn) return;
+
+  fetchBtn.addEventListener("click", async () => {
+    const cityInput = document.getElementById("city-input");
+    const city = cityInput.value.trim();
+
+    if (!city) {
+      displayError("Please enter a city name");
+      return;
+    }
+
+    try {
+      const data = await fetchWeatherData(city);
+      displayWeather(data);
+    } catch (error) {
+      displayError(error.message);
+    }
+  });
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("DOMContentLoaded", setupEventListeners);
+}
+
+module.exports = {
+  fetchWeatherData,
+  displayWeather,
+  displayError,
+  setupEventListeners,
+};
